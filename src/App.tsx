@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Route, Redirect, useHistory } from 'react-router-dom';
 import aituBridge from "@btsd/aitu-bridge";
 import {
   IonApp,
@@ -7,79 +8,26 @@ import {
   IonContent,
   IonButton,
   IonText,
+  IonRouterOutlet
 } from "@ionic/react";
+import { IonReactRouter } from '@ionic/react-router';
 
 import "./App.css";
+import Dashboard from "./pages/Dashboard";
+import Welcome from "./pages/Welcome";
 
-/* Core CSS required for Ionic components to work properly */
-import "@ionic/react/css/core.css";
-
-/* Basic CSS for apps built with Ionic */
-import "@ionic/react/css/normalize.css";
-import "@ionic/react/css/structure.css";
-import "@ionic/react/css/typography.css";
-
-/* Optional CSS utils that can be commented out */
-import "@ionic/react/css/padding.css";
-import "@ionic/react/css/float-elements.css";
-import "@ionic/react/css/text-alignment.css";
-import "@ionic/react/css/text-transformation.css";
-import "@ionic/react/css/flex-utils.css";
-import "@ionic/react/css/display.css";
-
-/* Theme variables */
-import "./theme/variables.css";
-
-interface ISlideContentProps {
-  title: string;
-  onClick: () => void;
-  description: string;
-  buttonTitle: string;
-  imgSrc: string;
-}
-
-const SlideContent: React.FC<ISlideContentProps> = ({
-  onClick,
-  title,
-  description,
-  buttonTitle,
-  imgSrc,
-}) => {
-  return (
-    <>
-      <img src={imgSrc} />
-      <div className="slide-block">
-        <IonText color="dark">
-          <h2>{title}</h2>
-        </IonText>
-        <IonText>
-          <sub>{description}</sub>
-        </IonText>
-      </div>
-      <div className="slide-button">
-        <IonButton expand="full" onClick={onClick}>
-          {buttonTitle}
-        </IonButton>
-      </div>
-    </>
-  );
-};
-
-const App: React.FC = () => {
+const App: React.FunctionComponent = () => {
   // Optional parameters to pass to the swiper instance.
   // See http://idangero.us/swiper/api/ for valid options.
-  const slideOpts = {
-    initialSlide: 0,
-    speed: 400,
-  };
-  const slider = useRef<HTMLIonSlidesElement>(null);
+  
+  const [name, setName] = useState("<username>");
+  const history = useHistory();
 
   async function getMe() {
     try {
       const data = await aituBridge.getMe();
       setName(data.name);
     } catch (e) {
-      // handle error
       console.log(e);
     }
   }
@@ -87,65 +35,24 @@ const App: React.FC = () => {
   useEffect(() => {
     if (aituBridge.isSupported()) {
       getMe();
+      if( name === '<username>') {
+        history.push('/welcome')
+      } else {
+        history.push('/dashboard')
+      }
     }
   }, []);
 
-  const [name, setName] = useState("<username>");
-
-  const handleButtonClick = () => {
-    slider.current?.slideNext();
-  };
-
   return (
     <IonApp>
-      <IonContent>
-        <IonSlides pager={true} options={slideOpts} ref={slider}>
-          <IonSlide>
-            <SlideContent
-              title={`Привет, ${name}, Мини-приложения в Aitu`}
-              onClick={handleButtonClick}
-              description={
-                "Расскажем, что это и как использовать aitu.apps для своего бизнеса"
-              }
-              buttonTitle={"Я готов!"}
-              imgSrc={"/assets/slide1.png"}
-            ></SlideContent>
-          </IonSlide>
-          <IonSlide>
-            <SlideContent
-                title={"+800.000 пользователей Aitu"}
-                onClick={handleButtonClick}
-                description={
-                  "Могут увидеть ваше мини-приложение и стать его пользователями"
-                }
-                buttonTitle={"Интересно"}
-                imgSrc={"/assets/slide2.png"}
-            ></SlideContent>
-          </IonSlide>
-          <IonSlide>
-            <SlideContent
-                title={"Всегда под рукой "}
-                onClick={handleButtonClick}
-                description={
-                  "Каталог с мини-приложениями находится на центральной вкладке. Пользователи легко его найдут"
-                }
-                buttonTitle={"Что ещё?"}
-                imgSrc={"/assets/slide3.png"}
-            ></SlideContent>
-          </IonSlide>
-          <IonSlide>
-            <SlideContent
-                title={"Баннер с ваши предложением"}
-                onClick={handleButtonClick}
-                description={
-                  "         Уникальная скидка, спецпредложение или акция. Донесите ценное предложение до всех пользователей Aitu"
-                }
-                buttonTitle={"Далее"}
-                imgSrc={"/assets/slide4.png"}
-            ></SlideContent>
-          </IonSlide>
-        </IonSlides>
-      </IonContent>
+      <IonReactRouter>
+        <IonRouterOutlet>
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/welcome" >
+              <Welcome />
+            </Route>
+        </IonRouterOutlet>
+      </IonReactRouter>
     </IonApp>
   );
 };
